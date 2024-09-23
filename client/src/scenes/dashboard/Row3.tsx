@@ -9,11 +9,16 @@ import {
 import { Box, Typography, useTheme } from "@mui/material";
 import { DataGrid, GridCellParams } from "@mui/x-data-grid";
 import React, { useMemo } from "react";
-import { Cell, Pie, PieChart } from "recharts";
+import { Cell, Pie, PieChart,   LineChart,  ResponsiveContainer,
+  CartesianGrid,   XAxis, Legend,
+  Line,
+  Tooltip,
+  YAxis,} from "recharts";
 
 const Row3 = () => {
   const { palette } = useTheme();
   const pieColors = [palette.primary[800], palette.primary[500]];
+  const { data } = useGetKpisQuery();
 
   const { data: kpiData } = useGetKpisQuery();
   const { data: productData } = useGetProductsQuery();
@@ -38,6 +43,19 @@ const Row3 = () => {
       );
     }
   }, [kpiData]);
+
+  const revenueProfit = useMemo(() => {
+    return (
+      data &&
+      data[0].monthlyData.map(({ month, revenue, expenses }) => {
+        return {
+          name: month.substring(0, 3),
+          revenue: revenue,
+          profit: (revenue - expenses).toFixed(2),
+        };
+      })
+    );
+  }, [data]);
 
   const productColumns = [
     {
@@ -121,65 +139,66 @@ const Row3 = () => {
           />
         </Box>
       </DashboardBox>
-      <DashboardBox gridArea="h">
-        <BoxHeader
-          title="Recent Orders"
-          sideText={`${transactionData?.length} latest transactions`}
-        />
-        <Box
-          mt="1rem"
-          p="0 0.5rem"
-          height="80%"
-          sx={{
-            "& .MuiDataGrid-root": {
-              color: palette.grey[300],
-              border: "none",
-            },
-            "& .MuiDataGrid-cell": {
-              borderBottom: `1px solid ${palette.grey[100]} !important`,
-            },
-            "& .MuiDataGrid-columnHeaders": {
-              borderBottom: `1px solid ${palette.grey[100]} !important`,
-            },
-            "& .MuiDataGrid-columnSeparator": {
-              visibility: "hidden",
-            },
-          }}
-        >
-          <DataGrid
-            columnHeaderHeight={25}
-            rowHeight={35}
-            hideFooter={true}
-            rows={transactionData || []}
-            columns={transactionColumns}
-          />
-        </Box>
-      </DashboardBox>
+      
       
       <DashboardBox gridArea="j">
         <BoxHeader
-          title="Overall Summary and Explanation Data"
-          sideText="+15%"
+          title="Profit and Revenue"
+          subtitle="top line represents revenue, bottom line represents expenses"
+          sideText="+4%"
         />
-        <Box
-          height="15px"
-          margin="1.25rem 1rem 0.4rem 1rem"
-          bgcolor={palette.primary[800]}
-          borderRadius="1rem"
-        >
-          <Box
-            height="15px"
-            bgcolor={palette.primary[600]}
-            borderRadius="1rem"
-            width="40%"
-          ></Box>
-        </Box>
-        <Typography margin="0 1rem" variant="h6">
-        The dashboard leverages machine learning to provide advanced
-         financial insights and predictions. It uses ML algorithms
-          to analyze historical data, identify trends, and forecast future performance with high accuracy. Users benefit
-           from predictive analytics that highlight potential investment opportunities, detect anomalies, and offer actionable recommendations. 
-        </Typography>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            width={500}
+            height={400}
+            data={revenueProfit}
+            margin={{
+              top: 20,
+              right: 0,
+              left: -10,
+              bottom: 55,
+            }}
+          >
+            <CartesianGrid vertical={false} stroke={palette.grey[100]} />
+            <XAxis
+              dataKey="name"
+              tickLine={false}
+              style={{ fontSize: "10px" }}
+            />
+            <YAxis
+              yAxisId="left"
+              tickLine={false}
+              axisLine={false}
+              style={{ fontSize: "10px" }}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              tickLine={false}
+              axisLine={false}
+              style={{ fontSize: "10px" }}
+            />
+            <Tooltip />
+            <Legend
+              height={20}
+              wrapperStyle={{
+                margin: "0 0 10px 0",
+              }}
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="profit"
+              stroke={palette.tertiary[500]}
+            />
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="revenue"
+              stroke={palette.primary.main}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </DashboardBox>
     </>
   );
